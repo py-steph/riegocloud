@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sudo bash -c "cat > /lib/systemd/system/riego-cloud.service" <<'EOT'
+sudo bash -c "cat > /lib/systemd/system/riegocloud.service" <<'EOT'
 [Unit]
 Description=Riego Cloud Service
 After=memcached.service
@@ -11,8 +11,8 @@ StartLimitBurst=5
 Environment="PYTHONUNBUFFERED=1"
 Type=simple
 User=riego-cloud
-WorkingDirectory=/srv/riego-cloud
-ExecStart=/srv/riego-cloud/.venv/bin/riego-cloud
+WorkingDirectory=/srv/riegocloud
+ExecStart=/srv/riegocloud/.venv/bin/riegocloud
 Restart=always
 RestartSec=3s
 
@@ -21,5 +21,5 @@ WantedBy=multi-user.target
 EOT
 
 systemctl daemon-reload
-systemctl enable riego-cloud
-systemctl restart riego-cloud
+systemctl enable riegocloud
+systemctl restart riegocloud
