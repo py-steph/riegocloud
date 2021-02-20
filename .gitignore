@@ -2,6 +2,7 @@
 .vscode/
 log/*
 db/*
+ssh/*
 
 /PRIVATE.txt
 /INSTALL.txt

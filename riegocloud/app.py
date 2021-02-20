@@ -4,7 +4,9 @@ import pkg_resources
 import os
 import sys
 from pathlib import Path
-import socket
+
+
+
 
 from riegocloud.web.views.home import Home
 
@@ -15,7 +17,9 @@ from aiohttp import web
 import jinja2
 import aiohttp_jinja2
 import aiohttp_debugtoolbar
+from aiohttp_remotes import setup as setup_remotes, XForwardedRelaxed
 
+from riegocloud.ssh import setup_ssh
 
 from riegocloud import __version__
 
@@ -24,6 +28,7 @@ PRIMARY_INI_FILE = 'riegocloud.conf'
 
 async def on_startup(app):
     logging.getLogger(__name__).debug("on_startup")
+
 
 
 async def on_shutdown(app):
@@ -74,6 +79,7 @@ async def run_app(options=None):
                          )
 
 
+    await setup_remotes(app, XForwardedRelaxed())
     if options.enable_aiohttp_debug_toolbar:
         aiohttp_debugtoolbar.setup(
             app, check_host=False, intercept_redirects=False)
@@ -81,6 +87,7 @@ async def run_app(options=None):
     app.router.add_static('/static', options.http_server_static_dir,
                           name='static', show_index=True)
 
+    setup_ssh(app)
     Home(app)
 
     return app

@@ -19,6 +19,7 @@ setuptools.setup(
         'ConfigArgParse',
         'aiohttp',
         'aiohttp_jinja2',
+        'aiohttp_remotes',
         'aiohttp_debugtoolbar',
         'uvloop; sys_platform == "linux"',
         'cchardet',
