@@ -1,0 +1,3 @@
+include README.md
+recursive-include riego-srv/web/static *
+recursive-include riego-srv/web/templates *

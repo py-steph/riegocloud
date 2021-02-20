@@ -1,0 +1,25 @@
+.venv/
+.vscode/
+log/*
+db/*
+
+/PRIVATE.txt
+/INSTALL.txt
+/CHANGELOG.md
+/requirements_dev.txt
+/riego.conf
+/tt.py
+/upload.bat
+
+
+# Setuptools distribution folder.
+/dist/
+/build/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+/*.egg
+
+
+*/__pycache__
+*.pyc

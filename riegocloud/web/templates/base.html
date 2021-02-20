@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{{ url('static', filename='vendor/bootstrap.min.css') }}" rel="stylesheet" type="text/css">
+    <link rel="icon" type="image/png" href="{{ url('static', filename='favicon.png') }}">
+
+    {% block head %}
+    <title>{{title}}</title>
+    {% endblock %}
+    <style>
+        body {
+            padding-bottom: 20px;
+        }
+
+        .navbar {
+            margin-bottom: 20px;
+        }
+
+        /* Sticky footer styles
+-------------------------------------------------- */
+        html {
+            position: relative;
+            min-height: 100%;
+        }
+
+        body {
+            margin-bottom: 60px;
+            /* Margin bottom by footer height */
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            /* Set the fixed height of the footer here */
+            line-height: 60px;
+            /* Vertically center the text there */
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    {% set navigation_bar = [
+    (url('home'), 'home', 'Home'),
+    ] -%}
+    {% set active_menu = active_menu|default('home') -%}
+
+    <div class="container">
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light rounded" aria-label="Eleventh navbar example">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarsExample09" aria-controls="navbarsExample09" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarsExample09">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        {% for href, id, caption in navigation_bar %}
+                        <li class="nav-item{% if id==active_menu %} active{% endif%}">
+                            <a class="nav-link" href="{{ href|e }}">{{ caption|e }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            {% if alert %}
+            <div class="alert {{alert.class}} alert-dismissible fade show" role="alert">
+                {% if alert.heading %}
+                <h4 class="alert-heading">{{alert.heading}}</h4>
+                {% endif %}
+                <p>{{alert.text}}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            {% block content%}
+            <h1>{{title}}</h1>
+            {% endblock %}
+        </main>
+
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <span class="text-muted">Riego Version: {{app.version}}</span>
+        </div>
+    </footer>
+
+
+
+    <script src="{{ url('static', filename='vendor/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>
