@@ -19,7 +19,7 @@ import aiohttp_debugtoolbar
 
 from riegocloud import __version__
 
-PRIMARY_INI_FILE = 'riego-cloud.conf'
+PRIMARY_INI_FILE = 'riegocloud.conf'
 
 
 async def on_startup(app):
@@ -111,8 +111,8 @@ def _setup_logging(options=None):
 
 def _get_options():
     p = configargparse.ArgParser(
-        default_config_files=['/etc/riego-cloud/conf.d/*.conf',
-                              '~/.riego-cloud.conf',
+        default_config_files=['/etc/riegocloud/conf.d/*.conf',
+                              '~/.riegocloud.conf',
                               PRIMARY_INI_FILE],
         args_for_writing_out_config_file=['-w',
                                           '--write-out-config-file'])
@@ -120,13 +120,13 @@ def _get_options():
           required=False, help='config file path')
 # Database
     p.add('-d', '--db_filename', help='Path and name for DB file',
-          default='db/riego-cloud.db')
+          default='db/riegocloud.db')
     p.add('--db_migrations_dir',
           help='path to database migrations directory',
           default=pkg_resources.resource_filename('riegocloud', 'migrations'))
 # Logging
     p.add('-l', '--log_file', help='Full path to logfile',
-          default='log/riego-cloud.log')
+          default='log/riegocloud.log')
     p.add('--log_max_bytes', help='Maximum logfile size in bytes',
           default=1024*300, type=int)
     p.add('--log_backup_count', help='How many files to rotate',

@@ -10,7 +10,7 @@ StartLimitBurst=5
 [Service]
 Environment="PYTHONUNBUFFERED=1"
 Type=simple
-User=riego-cloud
+User=riegocloud
 WorkingDirectory=/srv/riegocloud
 ExecStart=/srv/riegocloud/.venv/bin/riegocloud
 Restart=always
