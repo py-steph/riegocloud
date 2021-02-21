@@ -19,6 +19,9 @@ import aiomcache
 
 
 from riegocloud.web.views.home import Home
+from riegocloud.web.views.system import setup_routes_system
+from riegocloud.web.security import current_user_ctx_processor, setup_routes_security
+
 from riegocloud.ssh import setup_ssh
 from riegocloud.db import setup_db
 
@@ -82,7 +85,7 @@ async def run_app(options=None):
     aiohttp_jinja2.setup(app,
                          loader=loader,
                          # enable_async=True,
-                         # context_processors=[current_user_ctx_processor],
+                         context_processors=[current_user_ctx_processor],
                          )
 
     await setup_remotes(app, XForwardedRelaxed())
@@ -92,9 +95,13 @@ async def run_app(options=None):
 
     app.router.add_static('/static', options.http_server_static_dir,
                           name='static', show_index=True)
+    
 
+    db = setup_db(options=options)    
     setup_ssh(app)
-    db = setup_db(options=options)
+    setup_routes_security(app)
+    setup_routes_system(app)
+    
     Home(app)
 
     return app
@@ -145,6 +152,10 @@ def _get_options():
           default=1024*300, type=int)
     p.add('--log_backup_count', help='How many files to rotate',
           default=3, type=int)
+# Secrets & Scurity
+    p.add('--max_age_remember_me', type=int, default=7776000)
+    p.add('--cookie_name_remember_me', default="remember_me")
+    p.add('--reset_admin', help='Reset admin-pw to given value an exit')          
 # Memcache
     p.add('--memcached_host', help='IP adress of memcached host',
           default='127.0.0.1')
@@ -196,4 +207,33 @@ def _get_options():
         print('Version: ', __version__)
         exit(0)
 
+
+    if options.reset_admin:
+        _reset_admin(options)
+        exit(0)
+        
+
     return options
+
+def _reset_admin(options):
+    from sqlite3 import IntegrityError
+    from riegocloud.db import setup_db
+    import bcrypt
+
+    db = setup_db(options=options)
+    password = options.reset_admin
+
+    if len(password) > 0:
+        password = password.encode('utf-8')
+        password = bcrypt.hashpw(password, bcrypt.gensalt(12))
+        try:
+            with db.conn:
+                db.conn.execute(
+                    '''UPDATE users
+                        SET password = ?
+                        WHERE id = ? ''', (password, 1))
+        except IntegrityError as e:
+            print(f'Unable to reset Admin PW: {e}')
+        else:
+            print(f'Succesfully reset Admin PW: {password}')
+    db.conn.close()

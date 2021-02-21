@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% set title = "Riego - System" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+
+
+<p>
+  <a href="{{url('system_check_update')}}">Check Update</a>
+</p>
+
+<p>
+  <a href="{{url('system_do_update')}}">Do Update</a>
+</p>
+
+<p>
+  <a href="{{url('system_restart')}}">Restart</a>
+</p>
+
+
+{% endblock %}
+

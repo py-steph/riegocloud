@@ -47,6 +47,7 @@
 <body>
     {% set navigation_bar = [
     (url('home'), 'home', 'Home'),
+    (url('system'), 'system', 'System'),
     ] -%}
     {% set active_menu = active_menu|default('home') -%}
 
@@ -69,6 +70,23 @@
                         {% endfor %}
                     </ul>
                 </div>
+
+                <div class="nav-item dropdown d-flex">
+                    {% if user is not none %}
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" 
+                        role="button"  data-bs-toggle="dropdown" aria-expanded="false">                        
+                            {{ user['identity'] }}</a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <li><a class="dropdown-item" href="{{url('logout')}}">Logout</a></li>
+                        <li><a class="dropdown-item" href="{{url('passwd')}}">Password Change</a></li>
+                    </ul>
+                    {% else %}
+                    <a class="nav-link" href="{{url('login')}}" id="navbarMenuLink" role="button">Login</a>
+                    {% endif %}
+                </div>
+
+
+
             </div>
         </nav>
 
