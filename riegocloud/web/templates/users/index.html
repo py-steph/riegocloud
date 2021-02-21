@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% set title = "Riego - User" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>User</h1>
+<p>
+  <ul>
+    {% for item in items %}
+    <li>
+      <a href="{{url('users_item_view', item_id=item['id']) }}">{{ item['identity'] }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</p>
+<hr>
+<p>
+  <a href="{{url('users_new')}}">New</a> 
+</p>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% set title = "Riego - User" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>Change Password</h1>
+<form action="{{url('passwd')}}" method="POST" enctype="multipart/form-data">
+
+      <div class="mb-3">
+        <label for="old_password" class="form-label">old_password</label>
+        <input id="old_password" name="old_password" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="new_password_1" class="form-label">new_password_1</label>
+        <input id="new_password_1" name="new_password_1" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="new_password_2" class="form-label">new_password_2</label>
+        <input id="new_password_2" name="new_password_2" type="text" class="form-control">
+      </div>
+
+      <input type="submit">
+</form>
+
+{% endblock %}

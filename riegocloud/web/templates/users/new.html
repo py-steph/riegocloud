@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% set title = "Riego - User" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>New User</h1>
+<form action="{{url('users_new')}}" method="POST"
+      enctype="multipart/form-data">
+
+      <div class="mb-3">
+        <label for="identity" class="form-label">identity</label>
+        <input id="identity" name="identity" value="{{item['identity']}}"  type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">password</label>
+        <input id="password" name="password" value="{{item['password']}}"  type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="full_name" class="form-label">full_name</label>
+        <input id="full_name" name="full_name" value="{{item['full_name']}}"  type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">email</label>
+        <input id="email" name="email" value="{{item['email']}}"  type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="permission_id" class="form-label">permission_id</label>
+        <input id="permission_id" name="permission_id" value="{{item['permission_id']}}"  type="text" class="form-control">
+      </div>
+
+
+      <div class="mb-3">
+        <label for="is_superuser" class="form-label">is_superuser</label>
+        <input id="is_superuser" name="is_superuser" value="{{item['is_superuser']}}"  type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="is_disabled" class="form-label">is_disabled</label>
+        <input id="is_disabled" name="is_disabled" value="{{item['is_disabled']}}"  type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="remember_me" class="form-label">remember_me</label>
+        <input id="remember_me" name="remember_me" value="{{item['remember_me']}}"  type="text" class="form-control">
+      </div>
+
+
+      <input type="submit">
+</form>
+<hr>
+<p>
+    <a href="{{url('users')}}">list</a>
+</p>
+{% endblock %}

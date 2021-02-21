@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% set title = "Riego - User" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>{{ item['identity'] }}</h1>
+<ul>
+    <li>id: {{item['id']}}</li>
+    <li>identity: {{item['identity']}}</li>
+	<li>password: {{item['password']}}</li>
+    <li>full_name: {{item['full_name']}}</li>
+    <li>email: {{item['email']}}</li>
+	<li>is_superuser: {{item['is_superuser']}}</li>
+	<li>is_disabled: {{item['is_disabled']}}</li>
+	<li>remember_me: {{item['remember_me']}}</li>
+	<li>created_at: {{item['created_at']}}</li>
+</ul>
+
+<p>
+    <a href="{{url('users')}}">list</a> 
+    <a href="{{url('users_item_edit',item_id=item['id'])}}">edit</a>
+</p>
+{% endblock %}

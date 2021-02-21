@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% set title = "Riego - Login" %}
+{% set active_menu = "home" %}
+
+{% block content %}
+    <style>
+       .form-signin {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            margin: 0 auto;
+        }
+
+        .form-signin .checkbox {
+            font-weight: 400;
+        }
+
+        .form-signin .form-control {
+            position: relative;
+            box-sizing: border-box;
+            height: auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .form-signin .form-control:focus {
+            z-index: 2;
+        }
+
+        .form-signin input[type="email"] {
+            margin-bottom: -1px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .form-signin input[type="password"] {
+            margin-bottom: 10px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    </style>
+
+<container class="text-center">
+    <form class="form-signin" action="{{url('login') }}" method="POST" enctype="multipart/form-data">
+        <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+        <label for="input_identity" class="sr-only">Username</label>
+        <input name="identity" type="text" id="input_identity" class="form-control" 
+                placeholder="Username" required autofocus>
+        <label for="input_password" class="sr-only">Password</label>
+        <input name="password" type="password" id="input_password" class="form-control"
+                placeholder="Password" required>
+        <div class="checkbox mb-3">
+            <label>
+                <input name="remember_me" type="checkbox" value="remember_me"> Remember me
+            </label>
+            <input name="csrf_token" type="hidden" value="{{csrf_token}}">
+            <input name="redirect" type="hidden" value="{{redirect}}">
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+</container>
+
+{% endblock %}

@@ -5,21 +5,22 @@ import os
 import sys
 from pathlib import Path
 
-
-
-
-from riegocloud.web.views.home import Home
-
 import logging
 from logging.handlers import RotatingFileHandler
 
 from aiohttp import web
-import jinja2
 import aiohttp_jinja2
+import jinja2
 import aiohttp_debugtoolbar
 from aiohttp_remotes import setup as setup_remotes, XForwardedRelaxed
+from aiohttp_session import setup as session_setup, get_session
+from aiohttp_session.memcached_storage import MemcachedStorage
+import aiomcache
 
+
+from riegocloud.web.views.home import Home
 from riegocloud.ssh import setup_ssh
+from riegocloud.db import setup_db
 
 from riegocloud import __version__
 
@@ -28,7 +29,6 @@ PRIMARY_INI_FILE = 'riegocloud.conf'
 
 async def on_startup(app):
     logging.getLogger(__name__).debug("on_startup")
-
 
 
 async def on_shutdown(app):
@@ -71,13 +71,19 @@ async def run_app(options=None):
     app['version'] = __version__
     app['options'] = options
 
+    mcache = aiomcache.Client(options.memcached_host, options.memcached_port)
+    session_setup(app, MemcachedStorage(mcache))
+    async def mcache_shutdown(app):
+        await mcache.close()
+    app.on_shutdown.append(mcache_shutdown)
+
+
     loader = jinja2.FileSystemLoader(options.http_server_template_dir)
     aiohttp_jinja2.setup(app,
                          loader=loader,
                          # enable_async=True,
                          # context_processors=[current_user_ctx_processor],
                          )
-
 
     await setup_remotes(app, XForwardedRelaxed())
     if options.enable_aiohttp_debug_toolbar:
@@ -88,6 +94,7 @@ async def run_app(options=None):
                           name='static', show_index=True)
 
     setup_ssh(app)
+    db = setup_db(options=options)
     Home(app)
 
     return app
@@ -188,6 +195,5 @@ def _get_options():
     if options.version:
         print('Version: ', __version__)
         exit(0)
-    
-    return options
 
+    return options
