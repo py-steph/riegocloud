@@ -169,7 +169,7 @@ def _get_options():
           default=11211, type=int)
 # HTTP-Server / API
     p.add('--http_server_bind_address',
-          help='http-server bind address', default='0.0.0.0')
+          help='http-server bind address', default='127.0.0.1')
     p.add('--http_server_bind_port', help='http-server bind port',
           default=8181, type=int)
     p.add('--ssh_server_hostname', help='Send this hostname to client',
