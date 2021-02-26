@@ -20,6 +20,7 @@ import aiomcache
 
 from riegocloud.web.views.home import Home
 from riegocloud.web.views.system import setup_routes_system
+from riegocloud.web.views.api import setup_routes_api
 from riegocloud.web.security import current_user_ctx_processor, setup_routes_security
 
 from riegocloud.ssh import setup_ssh
@@ -62,7 +63,7 @@ def main():
 async def run_app(options=None):
     loop = asyncio.get_event_loop()
 
-    if options.enable_asyncio_debug:
+    if options.enable_asyncio_debug_log:
         loop.set_debug(True)
 
     app = web.Application()
@@ -76,10 +77,10 @@ async def run_app(options=None):
 
     mcache = aiomcache.Client(options.memcached_host, options.memcached_port)
     session_setup(app, MemcachedStorage(mcache))
+
     async def mcache_shutdown(app):
         await mcache.close()
     app.on_shutdown.append(mcache_shutdown)
-
 
     loader = jinja2.FileSystemLoader(options.http_server_template_dir)
     aiohttp_jinja2.setup(app,
@@ -95,13 +96,13 @@ async def run_app(options=None):
 
     app.router.add_static('/static', options.http_server_static_dir,
                           name='static', show_index=True)
-    
 
-    db = setup_db(options=options)    
-    setup_ssh(app)
+    db = setup_db(options=options)
+    setup_ssh(app, options=options, db=db)
     setup_routes_security(app)
     setup_routes_system(app)
-    
+    setup_routes_api(app)
+
     Home(app)
 
     return app
@@ -129,6 +130,11 @@ def _setup_logging(options=None):
     else:
         logging.getLogger("aiohttp.access").setLevel(logging.ERROR)
 
+    if options.enable_ssh_debug_log:
+        logging.getLogger("asyncssh").setLevel(logging.DEBUG)
+    else:
+        logging.getLogger("asyncssh").setLevel(logging.ERROR)
+
 
 def _get_options():
     p = configargparse.ArgParser(
@@ -155,17 +161,30 @@ def _get_options():
 # Secrets & Scurity
     p.add('--max_age_remember_me', type=int, default=7776000)
     p.add('--cookie_name_remember_me', default="remember_me")
-    p.add('--reset_admin', help='Reset admin-pw to given value an exit')          
+    p.add('--reset_admin', help='Reset admin-pw to given value an exit')
 # Memcache
     p.add('--memcached_host', help='IP adress of memcached host',
           default='127.0.0.1')
     p.add('--memcached_port', help='Port of memcached service',
           default=11211, type=int)
-# HTTP-Server
+# HTTP-Server / API
     p.add('--http_server_bind_address',
-          help='http-server bind address', default='127.0.0.1')
+          help='http-server bind address', default='0.0.0.0')
     p.add('--http_server_bind_port', help='http-server bind port',
           default=8181, type=int)
+    p.add('--ssh_server_hostname', help='Send this hostname to client',
+          default="cloud.finca-panorama.es")
+    p.add('--ssh_server_port', help='Send this port to client',
+          default=8022, type=int)
+
+# SSH-Server
+    p.add('--ssh_server_bind_port', help='ssh-server bind port',
+          default=8022, type=int)
+    p.add('--ssh_server_bind_address', help='ssh-server bind address',
+          default='0.0.0.0')
+    p.add('--ssh_host_key',
+          help='ssh Host key', default='ssh/ssh_host_key')
+
 # Directories
     p.add('--base_dir', help='Change only if you know what you are doing',
           default=Path(__file__).parent)
@@ -178,7 +197,8 @@ def _get_options():
 # Debug
     p.add('--enable_aiohttp_debug_toolbar', action='store_true')
     p.add('--enable_aiohttp_access_log', action='store_true')
-    p.add('--enable_asyncio_debug', action='store_true')
+    p.add('--enable_asyncio_debug_log', action='store_true')
+    p.add('--enable_ssh_debug_log', action='store_true')
     p.add('--WindowsSelectorEventLoopPolicy', action='store_true')
 
 # Version, Help, Verbosity
@@ -207,13 +227,12 @@ def _get_options():
         print('Version: ', __version__)
         exit(0)
 
-
     if options.reset_admin:
         _reset_admin(options)
         exit(0)
-        
 
     return options
+
 
 def _reset_admin(options):
     from sqlite3 import IntegrityError
