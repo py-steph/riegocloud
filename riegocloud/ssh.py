@@ -77,6 +77,7 @@ class MySSHServer(asyncssh.SSHServer):
             _log.error(
                 f'{self._cloud_identifier}: unallowed TCP forarding requested')
             return False
+        _log.debug(f'Port forwarding established: {listen_host}:{listen_port}')
         return True
 
     def connection_made(self, conn):
