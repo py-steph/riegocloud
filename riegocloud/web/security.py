@@ -160,13 +160,14 @@ async def _login_apply(request: web.Request):
 @ router.get("/logout", name='logout')
 async def _logout(request: web.Request):
     user = await get_user(request)
-    try:
-        with get_db().conn:
-            get_db().conn.execute("""UPDATE users
-                                     SET remember_me = ''
-                                     WHERE id = ?""", (user['id'],))
-    except IntegrityError:
-        pass
+    if user is not None:
+        try:
+            with get_db().conn:
+                get_db().conn.execute("""UPDATE users
+                                        SET remember_me = ''
+                                        WHERE id = ?""", (user['id'],))
+        except IntegrityError:
+            pass
     session = await get_session(request)
     if session is not None:
         session.pop('user_id', None)
@@ -189,7 +190,7 @@ async def _passwd_apply(request: web.Request):
     user = await get_user(request)
 
 # TODO check old_password and equality of pw1 an pw2
-    password = form['new_password_1'].encode('utf8')
+    password = form['new_password_1'].encode('utf-8')
     password = bcrypt.hashpw(password, bcrypt.gensalt(12))
     try:
         with get_db().conn:

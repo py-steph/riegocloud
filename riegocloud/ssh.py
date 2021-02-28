@@ -91,7 +91,6 @@ class MySSHServer(asyncssh.SSHServer):
             _log.debug(f'SSH connection error: {exc}')
         else:
             _log.debug('SSH connection closed.')
-
         MySSHServer._conn_list.remove(self._conn)
         self._conn = None
 
@@ -101,7 +100,7 @@ class MySSHServer(asyncssh.SSHServer):
                           FROM clients
                           WHERE cloud_identifier = ?""", (username,))
         row = cursor.fetchone()
-        if row is None:
+        if row is None or row['is_disabled']:
             return True
 
         self._cloud_identifier = username

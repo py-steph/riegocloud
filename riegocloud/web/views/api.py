@@ -3,6 +3,8 @@ import asyncio
 import sys
 import json
 import asyncssh
+from jinja2 import FileSystemLoader, Environment, TemplateNotFound
+from pathlib import Path
 
 from sqlite3 import IntegrityError
 from riegocloud.db import get_db
@@ -49,11 +51,11 @@ async def api_post(request):
         try:
             with get_db().conn:
                 get_db().conn.execute(
-                    '''UPDATE clients
-                       SET public_user_key = ?,
-                       SET ssh_server_listen_port = ?,
-                       SET ssh_server_hostname = ?,
-                       SET ssh_server_port = ?,
+                    '''UPDATE clients SET
+                       public_user_key = ?,
+                       ssh_server_listen_port = ?,
+                       ssh_server_hostname = ?,
+                       ssh_server_port = ?
                        WHERE cloud_identifier = ? ''',
                     (public_user_key, ssh_server_listen_port,
                      options.ssh_server_hostname, options.ssh_server_port,
@@ -71,4 +73,37 @@ async def api_post(request):
     data['ssh_server_port'] = options.ssh_server_port
     data['ssh_server_listen_port'] = ssh_server_listen_port
 
+    await create_apache_conf(options=options)
     return web.json_response(data)
+
+
+async def create_apache_conf(options=None):
+    cursor = get_db().conn.cursor()
+    cursor.execute("SELECT * FROM clients")
+    clients = cursor.fetchall()
+
+    env = Environment(
+        loader=FileSystemLoader(Path(options.apache_tpl_file).parent),
+        autoescape=False
+    )
+    try: 
+        template=env.get_template(Path(options.apache_tpl_file).name)
+    except TemplateNotFound as e:
+        _log.error(f'No template found: {e}')
+        return False
+
+    with open(options.apache_conf_file, "w") as f:
+        f.write(template.render(clients=clients))
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            '/usr/bin/sudo', 
+            '/usr/sbin/apachectl', 'graceful',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await proc.communicate()
+        print(f'stdout: {stdout}, stderr: {stderr}')
+    except FileNotFoundError as e:
+        print(f'Apache not reloaded: {e}')
+        return False
+    return True

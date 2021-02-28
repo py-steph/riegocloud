@@ -25,8 +25,8 @@ steps = [
     ),
     step(
     '''INSERT INTO "users"
-    ("identity","password","is_superuser")
-    VALUES ("admin","$2b$12$SsmDaUnej3koYln39Dq9Ue2VBjYd.FyGMeAV9kK3edRjAzLztIaCC",1)''',
+    ("identity","is_superuser")
+    VALUES ("admin",,1)''',
       '''DELETE FROM users WHERE identity = "admin" '''
     ),
     step(
@@ -49,5 +49,20 @@ steps = [
     CONSTRAINT "sequence_uc" UNIQUE("sequence"),
 	PRIMARY KEY("id"))''',
     ''' DROP TABLE "users_tokens" '''
+    ),
+    step(
+    '''CREATE TABLE "clients" (
+	"id"	                    INTEGER,
+	"cloud_identifier"	        TEXT,
+    "is_disabled"               INTEGER DEFAULT 0,
+	"public_user_key"    	    TEXT,
+    "ssh_server_listen_port"    INTEGER,
+  	"ssh_server_hostname"       TEXT,
+    "ssh_server_port"           INTEGER,
+	"created_at"	            timestamp DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "cloud_identifier_uc" UNIQUE("cloud_identifier"),
+    CONSTRAINT "ssh_server_listen_port_uc" UNIQUE("ssh_server_listen_port"),
+	PRIMARY KEY("id"))''',
+    '''DROP TABLE clients'''
     )
 ]

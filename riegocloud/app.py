@@ -28,7 +28,7 @@ from riegocloud.db import setup_db
 
 from riegocloud import __version__
 
-PRIMARY_INI_FILE = 'riegocloud.conf'
+app_name = 'riegocloud'
 
 
 async def on_startup(app):
@@ -138,22 +138,22 @@ def _setup_logging(options=None):
 
 def _get_options():
     p = configargparse.ArgParser(
-        default_config_files=['/etc/riegocloud/conf.d/*.conf',
-                              '~/.riegocloud.conf',
-                              PRIMARY_INI_FILE],
+        default_config_files=[f'/etc/{app_name}/conf.d/*.conf',
+                              f'~/.{app_name}.conf',
+                              f'{app_name}.conf'],
         args_for_writing_out_config_file=['-w',
                                           '--write-out-config-file'])
-    p.add('-c', '--config', is_config_file=True, env_var='RIEGO_CONF',
+    p.add('-c', '--config', is_config_file=True, env_var=app_name.capitalize(),
           required=False, help='config file path')
 # Database
     p.add('-d', '--db_filename', help='Path and name for DB file',
-          default='db/riegocloud.db')
+          default=f'db/{app_name}.db')
     p.add('--db_migrations_dir',
           help='path to database migrations directory',
-          default=pkg_resources.resource_filename('riegocloud', 'migrations'))
+          default=pkg_resources.resource_filename(app_name, 'migrations'))
 # Logging
     p.add('-l', '--log_file', help='Full path to logfile',
-          default='log/riegocloud.log')
+          default=f'log/{app_name}.log')
     p.add('--log_max_bytes', help='Maximum logfile size in bytes',
           default=1024*300, type=int)
     p.add('--log_backup_count', help='How many files to rotate',
@@ -176,7 +176,6 @@ def _get_options():
           default="cloud.finca-panorama.es")
     p.add('--ssh_server_port', help='Send this port to client',
           default=8022, type=int)
-
 # SSH-Server
     p.add('--ssh_server_bind_port', help='ssh-server bind port',
           default=8022, type=int)
@@ -184,16 +183,23 @@ def _get_options():
           default='0.0.0.0')
     p.add('--ssh_host_key',
           help='ssh Host key', default='ssh/ssh_host_key')
+# Apache patching
+    p.add('--apache_tpl_file', help='path to apache config template(s)',
+          default=pkg_resources.resource_filename(
+              app_name, 'apache/apache.conf.tpl'))
+    p.add('--apache_conf_file', help='path to apache config file',
+          default=pkg_resources.resource_filename(
+              app_name, 'apache/apache.conf'))
 
 # Directories
     p.add('--base_dir', help='Change only if you know what you are doing',
           default=Path(__file__).parent)
     p.add('--http_server_static_dir',
           help='Serve static html files from this directory',
-          default=pkg_resources.resource_filename('riegocloud.web', 'static'))
+          default=pkg_resources.resource_filename(f'{app_name}.web', 'static'))
     p.add('--http_server_template_dir',
           help='Serve template files from this directory',
-          default=pkg_resources.resource_filename('riegocloud.web', 'templates'))
+          default=pkg_resources.resource_filename(f'{app_name}.web', 'templates'))
 # Debug
     p.add('--enable_aiohttp_debug_toolbar', action='store_true')
     p.add('--enable_aiohttp_access_log', action='store_true')
@@ -212,7 +218,7 @@ def _get_options():
         print(p.format_values())
 
     try:
-        with open(PRIMARY_INI_FILE, 'xt') as f:
+        with open(f'{app_name}.conf', 'xt') as f:
             for item in vars(options):
                 f.write(f'# {item}={getattr(options, item)}\n')
     except IOError:

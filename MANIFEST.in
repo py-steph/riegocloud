@@ -1,3 +1,4 @@
 include README.md
 recursive-include riegocloud/web/static *
 recursive-include riegocloud/web/templates *
+recursive-include riegocloud/apache/ *
