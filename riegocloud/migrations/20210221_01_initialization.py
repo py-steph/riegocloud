@@ -26,7 +26,7 @@ steps = [
     step(
     '''INSERT INTO "users"
     ("identity","is_superuser")
-    VALUES ("admin",,1)''',
+    VALUES ("admin",1)''',
       '''DELETE FROM users WHERE identity = "admin" '''
     ),
     step(
