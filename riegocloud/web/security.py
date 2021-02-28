@@ -18,8 +18,10 @@ async def current_user_ctx_processor(request):
 
 router = web.RouteTableDef()
 
+
 def setup_routes_security(app):
     app.add_routes(router)
+
 
 async def get_user(request) -> Row:
     session = await get_session(request)
@@ -53,6 +55,7 @@ async def get_user(request) -> Row:
             return None
         return user
     return None
+
 
 async def check_permission(request, permission=None) -> Row:
     user = await get_user(request)
@@ -95,7 +98,6 @@ async def raise_permission(request: web.BaseRequest, permission: str = None):
         )
 
 
-
 @router.get("/login", name='login')
 @aiohttp_jinja2.template("security/login.html")
 async def _login(request: web.Request):
@@ -125,8 +127,13 @@ async def _login_apply(request: web.Request):
                     FROM users
                     WHERE identity = ?""", (form['identity'],))
     user = cursor.fetchone()
-    
-    if user is None or user['is_disabled'] or not len(user['password']):
+
+    if (
+        user is None or
+        user['is_disabled'] or
+        user['password'] is None or
+        not len(user['password'])
+    ):
         await asyncio.sleep(2)
         raise web.HTTPSeeOther(request.app.router['login'].url_for())
     if not bcrypt.checkpw(form['password'].encode('utf-8'), user['password']):

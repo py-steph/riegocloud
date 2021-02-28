@@ -188,8 +188,7 @@ def _get_options():
           default=pkg_resources.resource_filename(
               app_name, 'apache/apache.conf.tpl'))
     p.add('--apache_conf_file', help='path to apache config file',
-          default=pkg_resources.resource_filename(
-              app_name, 'apache/apache.conf'))
+          default='apache/apache.conf'))
 
 # Directories
     p.add('--base_dir', help='Change only if you know what you are doing',
