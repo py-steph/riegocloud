@@ -92,6 +92,8 @@ async def create_apache_conf(options=None):
         _log.error(f'No template found: {e}')
         return False
 
+    Path(options.apache_conf_file).parent.mkdir(parents=True, exist_ok=True)
+
     with open(options.apache_conf_file, "w") as f:
         f.write(template.render(clients=clients))
 
