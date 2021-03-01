@@ -2,7 +2,7 @@ import asyncio
 import asyncssh
 import sys
 
-from sqlite3 import IntegrityError
+
 from riegocloud.db import get_db
 
 from logging import getLogger
@@ -98,7 +98,7 @@ class MySSHServer(asyncssh.SSHServer):
         cursor = get_db().conn.cursor()
         cursor.execute("""SELECT *
                           FROM clients
-                          WHERE cloud_identifier = ?""", (username,))
+                          WHERE cloud_identifier = %s""", (username,))
         row = cursor.fetchone()
         if row is None or row['is_disabled']:
             return True

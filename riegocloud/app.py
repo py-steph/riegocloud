@@ -240,24 +240,27 @@ def _get_options():
 
 
 def _reset_admin(options):
-    from sqlite3 import IntegrityError
+    from psycopg2 import IntegrityError
     from riegocloud.db import setup_db
     import bcrypt
 
-    db = setup_db(options=options)
     password = options.reset_admin
+    if len(password) == 0:
+        return
+    password = password.encode('utf-8')
+    password = bcrypt.hashpw(password, bcrypt.gensalt(12))
 
-    if len(password) > 0:
-        password = password.encode('utf-8')
-        password = bcrypt.hashpw(password, bcrypt.gensalt(12))
-        try:
-            with db.conn:
-                db.conn.execute(
-                    '''UPDATE users
-                        SET password = ?
-                        WHERE id = ? ''', (password, 1))
-        except IntegrityError as e:
-            print(f'Unable to reset Admin PW: {e}')
-        else:
-            print(f'Succesfully reset Admin PW: {password}')
-    db.conn.close()
+    conn = setup_db(options=options).conn
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''UPDATE users
+                            SET password = %s
+                            WHERE id = %s ''', (password, 1))
+        conn.commit()
+    except IntegrityError as e:
+        conn.rollback()
+    if cursor.rowcount = <1:
+        print('Error: Password not changed')
+    else:
+        print(f'Succesfully reset Admin PW: {password}')
+    conn.close()

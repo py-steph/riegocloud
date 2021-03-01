@@ -6,7 +6,7 @@ import asyncssh
 from jinja2 import FileSystemLoader, Environment, TemplateNotFound
 from pathlib import Path
 
-from sqlite3 import IntegrityError
+from psycopg2 import IntegrityError
 from riegocloud.db import get_db
 
 from logging import getLogger
@@ -28,8 +28,9 @@ async def api_post(request):
     if not len(cloud_identifier) or not len(public_user_key):
         await asyncio.sleep(5)
         raise web.HTTPBadRequest
-
-    cursor = get_db().conn.cursor()
+    
+    conn = get_db().conn
+    cursor = conn.cursor()
     cursor.execute("""SELECT MAX(ssh_server_listen_port) AS max_port
                     FROM clients""")
     max_port = cursor.fetchone()
@@ -39,28 +40,28 @@ async def api_post(request):
     else:
         ssh_server_listen_port = max_port + 1
     try:
-        with get_db().conn:
-            get_db().conn.execute(
+        cursor.execute(
                 """INSERT INTO clients
-                    ('cloud_identifier', 'public_user_key', ssh_server_listen_port,
+                    (cloud_identifier, public_user_key, ssh_server_listen_port,
                     ssh_server_hostname, ssh_server_port)
-                    VALUES (?,?,?,?,?)""",
+                    VALUES (%s,%s,%s,%s,%s)""",
                 (cloud_identifier, public_user_key, ssh_server_listen_port,
                  options.ssh_server_hostname, options.ssh_server_port))
-    except IntegrityError:
-        try:
-            with get_db().conn:
-                get_db().conn.execute(
-                    '''UPDATE clients SET
-                       public_user_key = ?,
-                       ssh_server_listen_port = ?,
-                       ssh_server_hostname = ?,
-                       ssh_server_port = ?
-                       WHERE cloud_identifier = ? ''',
+        conn.commit()
+    except IntegrityError as e:
+        print(f"Unable to insert: {e}")
+        conn.rollback()
+        cursor.execute('''UPDATE clients SET
+                       public_user_key = %s,
+                       ssh_server_listen_port = %s,
+                       ssh_server_hostname = %s,
+                       ssh_server_port = %s
+                       WHERE cloud_identifier = %s ''',
                     (public_user_key, ssh_server_listen_port,
                      options.ssh_server_hostname, options.ssh_server_port,
                      cloud_identifier))
-        except IntegrityError as e:
+        conn.commit()
+        if cursor.rowcount < 1:
             _log.error(f'Cannot update Client: {e}')
             await asyncio.sleep(5)
             raise web.HTTPBadRequest

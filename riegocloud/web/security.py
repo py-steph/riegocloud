@@ -1,6 +1,6 @@
 from aiohttp_session import get_session
 import aiohttp_jinja2
-from sqlite3 import IntegrityError, Row
+from psycopg2 import IntegrityError
 from riegocloud.db import get_db
 from aiohttp import web
 import bcrypt
@@ -23,15 +23,15 @@ def setup_routes_security(app):
     app.add_routes(router)
 
 
-async def get_user(request) -> Row:
+async def get_user(request):
     session = await get_session(request)
-    db = get_db()
+    conn = get_db().conn
     user_id = session.get('user_id')
     if user_id is not None:
-        cursor = db.conn.cursor()
+        cursor = conn.cursor()
         cursor.execute("""SELECT *, 'login' AS 'provider'
                           FROM users
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
         user = cursor.fetchone()
         if user is None or user['is_disabled']:
             session.pop('user_id', None)
@@ -39,27 +39,27 @@ async def get_user(request) -> Row:
         return user
     remember_me = request.cookies.get('remember_me')
     if remember_me is not None:
-        cursor = db.conn.cursor()
+        cursor = conn.cursor()
         cursor.execute("""SELECT *, 'cookie' AS 'provider'
-                           FROM users
-                           WHERE remember_me = ?""", (remember_me,))
+                          FROM users
+                          WHERE remember_me = %s""", (remember_me,))
         user = cursor.fetchone()
         if user is not None and user['is_disabled']:
             try:
-                with db.conn:
-                    db.conn.execute("""UPDATE users
-                                       SET remember_me = ''
-                                       WHERE id = ?""", (user['id'],))
+                cursor.execute("""UPDATE users
+                                  SET remember_me = ''
+                                  WHERE id = %s""", (user['id'],))
+                conn.commit()
             except IntegrityError:
-                pass
+                conn.rollback()
             return None
         return user
     return None
 
 
-async def check_permission(request, permission=None) -> Row:
+async def check_permission(request, permission=None):
     user = await get_user(request)
-    db = get_db()
+    conn = get_db().conn
     if user is None:
         return None
     if user['is_disabled']:
@@ -69,9 +69,9 @@ async def check_permission(request, permission=None) -> Row:
     if permission is None:
         return user
 
-    cursor = db.conn.cursor()
-    cursor.execute(
-        'SELECT * FROM users_permissions WHERE user_id = ?', (user['id'],))
+    cursor = conn.cursor()
+    cursor.execute('''SELECT * FROM users_permissions 
+                    WHERE user_id = %s''', (user['id'],))
     for row in cursor:
         if row['name'] == permission:
             return user
@@ -113,6 +113,7 @@ async def _login(request: web.Request):
 async def _login_apply(request: web.Request):
     form = await request.post()
     session = await get_session(request)
+    conn = get_db().conn
     if session.get('csrf_token') != form['csrf_token']:
         # Normally not possible
         await asyncio.sleep(2)
@@ -122,10 +123,10 @@ async def _login_apply(request: web.Request):
         await asyncio.sleep(2)
         raise web.HTTPSeeOther(request.app.router['login'].url_for())
 
-    cursor = get_db().conn.cursor()
+    cursor = conn.cursor()
     cursor.execute("""SELECT *, 'login' AS 'provider'
-                    FROM users
-                    WHERE identity = ?""", (form['identity'],))
+                      FROM users
+                      WHERE identity = %s""", (form['identity'],))
     user = cursor.fetchone()
 
     if (
@@ -149,14 +150,12 @@ async def _login_apply(request: web.Request):
     if form.get('remember_me') is not None:
         remember_me = secrets.token_urlsafe()
         try:
-            with get_db().conn:
-                get_db().conn.execute(
-                    '''UPDATE users
-                       SET remember_me = ?
-                       WHERE id = ? ''',
-                    (remember_me, user['id']))
+            cursor.execute('''UPDATE users
+                              SET remember_me = %s
+                              WHERE id = %s ''', (remember_me, user['id']))
+            conn.commit()
         except IntegrityError:
-            pass
+            conn.rollback()
         response.set_cookie("remember_me", remember_me,
                             max_age=request.app['options'].max_age_remember_me,
                             httponly=True,
@@ -167,14 +166,16 @@ async def _login_apply(request: web.Request):
 @ router.get("/logout", name='logout')
 async def _logout(request: web.Request):
     user = await get_user(request)
+    conn = get_db().conn
+    cursor = conn.cursor()
     if user is not None:
         try:
-            with get_db().conn:
-                get_db().conn.execute("""UPDATE users
-                                        SET remember_me = ''
-                                        WHERE id = ?""", (user['id'],))
+            cursor.execute("""UPDATE users
+                              SET remember_me = ''
+                              WHERE id = %s""", (user['id'],))
+            conn.commit()
         except IntegrityError:
-            pass
+            conn.rollback()
     session = await get_session(request)
     if session is not None:
         session.pop('user_id', None)
@@ -199,14 +200,16 @@ async def _passwd_apply(request: web.Request):
 # TODO check old_password and equality of pw1 an pw2
     password = form['new_password_1'].encode('utf-8')
     password = bcrypt.hashpw(password, bcrypt.gensalt(12))
+    conn = get_db().conn
+    cursor = conn.cursor()
     try:
-        with get_db().conn:
-            get_db().conn.execute(
-                '''UPDATE users
-                    SET password = ?
-                    WHERE id = ? ''', (password, user['id']))
+        cursor.execute('''UPDATE users
+                          SET password = %s
+                          WHERE id = %s ''', (password, user['id']))
+        conn.commit()
     except IntegrityError:
+        conn.rollback()
+    if cursor.rowcount < 1:
         raise web.HTTPSeeOther(request.app.router['passwd'].url_for())
     else:
         raise web.HTTPSeeOther(request.app.router['home'].url_for())
-    return {}  # not reached
