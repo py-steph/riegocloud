@@ -38,7 +38,6 @@ class Db:
             self.conn = psycopg2.connect(
                 dbname="riegocloud",
                 user="riegocloud",
-                password="riegocloud",
                 cursor_factory=DictCursor)
         except Exception as e:
             _log.error(f'Unable to connect to database: {e}')
@@ -49,7 +48,7 @@ class Db:
     def _do_migrations(self, options):
         try:
             backend = get_backend(
-                'postgresql://riegocloud@localhost/riegocloud')
+                'postgresql://riegocloud@/riegocloud')
         except Exception as e:
             _log.error(f'Unable to open database: {e}')
             exit(1)
