@@ -48,8 +48,7 @@ async def api_post(request):
                 (cloud_identifier, public_user_key, ssh_server_listen_port,
                  options.ssh_server_hostname, options.ssh_server_port))
         conn.commit()
-    except IntegrityError as e:
-        print(f"Unable to insert: {e}")
+    except IntegrityError:
         conn.rollback()
         cursor.execute('''UPDATE clients SET
                        public_user_key = %s,

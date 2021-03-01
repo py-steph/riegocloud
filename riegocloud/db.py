@@ -36,10 +36,10 @@ class Db:
 
         try:
             self.conn = psycopg2.connect(
-                dbname="riegocloud",
-                user="riegocloud",
+                dbname=options.db_name,
+                user=options.db_user,
                 cursor_factory=DictCursor)
-        except Exception as e:
+        except psycopg2.Error as e:
             _log.error(f'Unable to connect to database: {e}')
             if self.conn is not None:
                 self.conn.close()
@@ -48,8 +48,9 @@ class Db:
     def _do_migrations(self, options):
         try:
             backend = get_backend(
-                'postgresql://riegocloud@/riegocloud')
-        except Exception as e:
+                f'postgresql://{options.db_user}@/{options.db_name}'
+            )
+        except psycopg2.Error as e:
             _log.error(f'Unable to open database: {e}')
             exit(1)
 
@@ -61,16 +62,5 @@ class Db:
         try:
             if self.conn is not None:
                 self.conn.close()
-        except Exception as e:
+        except psycopg2.Error as e:
             _log.error(f'database.py: Unable to close Databse: {e}')
-
-
-class Options():
-    def __init__(self):
-        self.db_migrations_dir = "riegocloud/pg_mig"
-
-
-if __name__ == "__main__":
-    options = Options()
-
-    db = Db(options=options)

@@ -146,11 +146,12 @@ def _get_options():
     p.add('-c', '--config', is_config_file=True, env_var=app_name.capitalize(),
           required=False, help='config file path')
 # Database
-    p.add('-d', '--db_filename', help='Path and name for DB file',
-          default=f'db/{app_name}.db')
     p.add('--db_migrations_dir',
           help='path to database migrations directory',
           default=pkg_resources.resource_filename(app_name, 'migrations'))
+    p.add('--db_user', help='Database User', default='riegocloud')
+    p.add('--db_name', help='Database name', default='riegocloud')
+
 # Logging
     p.add('-l', '--log_file', help='Full path to logfile',
           default=f'log/{app_name}.log')
@@ -257,7 +258,7 @@ def _reset_admin(options):
                             SET password = %s
                             WHERE id = %s ''', (password, 1))
         conn.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         conn.rollback()
     if cursor.rowcount < 1:
         print('Error: Password not changed')
