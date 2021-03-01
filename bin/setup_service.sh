@@ -3,7 +3,7 @@
 sudo bash -c "cat > /lib/systemd/system/riegocloud.service" <<'EOT'
 [Unit]
 Description=Riego Cloud Service
-After=memcached.service
+After=memcached.service postgresql@11-main.service
 StartLimitIntervalSec=500
 StartLimitBurst=5
 
