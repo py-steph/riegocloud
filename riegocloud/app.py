@@ -259,7 +259,7 @@ def _reset_admin(options):
         conn.commit()
     except IntegrityError as e:
         conn.rollback()
-    if cursor.rowcount = <1:
+    if cursor.rowcount < 1:
         print('Error: Password not changed')
     else:
         print(f'Succesfully reset Admin PW: {password}')
