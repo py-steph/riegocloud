@@ -38,6 +38,7 @@ class Db:
             self.conn = psycopg2.connect(
                 dbname="riegocloud",
                 user="riegocloud",
+                password="riegocloud",
                 cursor_factory=DictCursor)
         except Exception as e:
             _log.error(f'Unable to connect to database: {e}')
