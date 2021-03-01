@@ -27,6 +27,7 @@ setuptools.setup(
         'bcrypt',
         'cchardet',
         'asyncssh',
+        'psycopg2',
     ],
     include_package_data=True,
     scripts=['bin/setup_service.sh'],

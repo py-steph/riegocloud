@@ -9,15 +9,15 @@ __depends__ = {'__init__'}
 steps = [
     step(
     '''CREATE TABLE "users" (
-	"id"	        serial,
-	"identity"	    VARCHAR,
-	"password"	    VARCHAR,
-    "full_name"     VARCHAR,
-    "email"         VARCHAR,
+	"id"	        INTEGER,
+	"identity"	    TEXT,
+	"password"	    TEXT,
+    "full_name"     TEXT,
+    "email"         TEXT,
     "permission_id"	INTEGER,
 	"is_superuser"	INTEGER DEFAULT 0,
 	"is_disabled"	INTEGER DEFAULT 0,
-	"remember_me"	VARCHAR,
+	"remember_me"	TEXT,
 	"created_at"	timestamp DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "identity_uc" UNIQUE("identity"),
 	PRIMARY KEY("id"))''',
@@ -26,13 +26,13 @@ steps = [
     step(
     '''INSERT INTO "users"
     ("identity","is_superuser")
-    VALUES ('admin',1)''',
-    """DELETE FROM users WHERE identity = 'admin' """
+    VALUES ("admin",1)''',
+      '''DELETE FROM users WHERE identity = "admin" '''
     ),
     step(
     ''' CREATE TABLE "users_permissions" (
-	"id"	        serial,
-	"name"	        VARCHAR,
+	"id"	        INTEGER,
+	"name"	        TEXT,
 	"user_id"	    INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
 	"created_at"	timestamp DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("id"))''',
@@ -40,10 +40,10 @@ steps = [
     ),
     step(
     ''' CREATE TABLE "users_tokens" (
-	"id"	        serial,
-	"sequence"	    VARCHAR NOT NULL,
-    "hash"	        VARCHAR,
-    "category"	    VARCHAR,
+	"id"	        INTEGER,
+	"sequence"	    TEXT NOT NULL,
+    "hash"	        TEXT,
+    "category"	    TEXT,
 	"user_id"	    INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
 	"created_at"	timestamp DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "sequence_uc" UNIQUE("sequence"),
@@ -52,12 +52,12 @@ steps = [
     ),
     step(
     '''CREATE TABLE "clients" (
-	"id"	                    serial,
-	"cloud_identifier"	        VARCHAR,
+	"id"	                    INTEGER,
+	"cloud_identifier"	        TEXT,
     "is_disabled"               INTEGER DEFAULT 0,
-	"public_user_key"    	    VARCHAR,
+	"public_user_key"    	    TEXT,
     "ssh_server_listen_port"    INTEGER,
-  	"ssh_server_hostname"       VARCHAR,
+  	"ssh_server_hostname"       TEXT,
     "ssh_server_port"           INTEGER,
 	"created_at"	            timestamp DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "cloud_identifier_uc" UNIQUE("cloud_identifier"),
