@@ -66,16 +66,17 @@ class MySSHServer(asyncssh.SSHServer):
     def _shutdown_all(cls):
         for conn in cls._conn_list:
             conn.close()
-
+                
     def __init__(self):
         self._cloud_identifier = None
         self._listen_port = None
         self._conn = None
 
-    def server_requested(self, listen_host, listen_port):
+    async def server_requested(self, listen_host, listen_port):
         if listen_host != 'localhost' or listen_port != self._listen_port:
             _log.error(
                 f'{self._cloud_identifier}: unallowed TCP forarding requested')
+            await asyncio.sleep(3)
             return False
         _log.debug(f'Port forwarding established: {listen_host}:{listen_port}')
         return True
@@ -94,20 +95,21 @@ class MySSHServer(asyncssh.SSHServer):
         MySSHServer._conn_list.remove(self._conn)
         self._conn = None
 
-    def begin_auth(self, username):
+    async def begin_auth(self, username):
         cursor = get_db().conn.cursor()
         cursor.execute("""SELECT *
                           FROM clients
                           WHERE cloud_identifier = %s""", (username,))
-        row = cursor.fetchone()
-        if row is None or row['is_disabled']:
+        client = cursor.fetchone()
+        if client is None or client['is_disabled']:
+            await asyncio.sleep(3)
             return True
 
         self._cloud_identifier = username
-        self._listen_port = row['ssh_server_listen_port']
-        print(row['public_user_key'])
+        self._listen_port = client['ssh_server_listen_port']
+
         key = asyncssh.import_authorized_keys(
-            row['public_user_key'])
+            client['public_user_key'])
         self._conn.set_authorized_keys(key)
         return True
 
