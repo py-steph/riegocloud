@@ -5,6 +5,28 @@
 
 {% block content %}
 
-{{ text }}
+
+<table class=table>
+    <thead>
+        <tr>
+            <th>client_id</th>
+            <th>timestamp</th>
+            <th>cloud_identifier</th>
+            <th>listen_port</th>
+            <th>ip:port</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for client in clients if clients is defined %}
+        <tr>
+            <td>{{client['client_id']}}</td>
+            <td>{{client['timestamp']}}</td>
+            <td>{{client['cloud_identifier']}}</td>
+            <td>{{client['listen_port']}}</td>
+            <td>{{client['ip']}}:{{client['port']}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 {% endblock %}

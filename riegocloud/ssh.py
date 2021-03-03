@@ -1,6 +1,7 @@
 import asyncio
 import asyncssh
 import sys
+from datetime import datetime
 
 
 from riegocloud.db import get_db
@@ -66,19 +67,35 @@ class MySSHServer(asyncssh.SSHServer):
     def _shutdown_all(cls):
         for conn in cls._conn_list:
             conn.close()
-                
+
+    @classmethod
+    def get_clients(cls):
+        ret = []
+        for conn in cls._conn_list:
+            ret.append({
+                'client_id': conn.get_extra_info('client_id'),
+                'timestamp': conn.get_extra_info('timestamp'),
+                'cloud_identifier': conn.get_extra_info('username'),
+                'listen_port': conn.get_extra_info('listen_port'),
+                'ip' : conn.get_extra_info('peername')[0],
+                'port' : conn.get_extra_info('peername')[1]
+
+            })
+        return ret
+
     def __init__(self):
-        self._cloud_identifier = None
-        self._listen_port = None
         self._conn = None
 
     async def server_requested(self, listen_host, listen_port):
-        if listen_host != 'localhost' or listen_port != self._listen_port:
-            _log.error(
-                f'{self._cloud_identifier}: unallowed TCP forarding requested')
+        if (listen_host != 'localhost' or
+                listen_port != self._conn.get_extra_info('listen_port')
+                ):
+            _log.error('unallowed TCP forarding requested from: {}'.format(
+                self._conn.get_extra_info('username')))
             await asyncio.sleep(3)
             return False
         _log.debug(f'Port forwarding established: {listen_host}:{listen_port}')
+        # TODO Write log-information to database: timestamp,
         return True
 
     def connection_made(self, conn):
@@ -105,8 +122,9 @@ class MySSHServer(asyncssh.SSHServer):
             await asyncio.sleep(3)
             return True
 
-        self._cloud_identifier = username
-        self._listen_port = client['ssh_server_listen_port']
+        self._conn.set_extra_info(listen_port=client['ssh_server_listen_port'])
+        self._conn.set_extra_info(client_id=client['id'])
+        self._conn.set_extra_info(timestamp=datetime.now())
 
         key = asyncssh.import_authorized_keys(
             client['public_user_key'])

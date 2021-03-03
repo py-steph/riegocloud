@@ -29,7 +29,7 @@ async def get_user(request):
     user_id = session.get('user_id')
     if user_id is not None:
         cursor = conn.cursor()
-        cursor.execute("""SELECT *, 'login' AS 'provider'
+        cursor.execute("""SELECT *, 'login' AS provider
                           FROM users
                           WHERE id = %s""", (user_id,))
         user = cursor.fetchone()
@@ -40,7 +40,7 @@ async def get_user(request):
     remember_me = request.cookies.get('remember_me')
     if remember_me is not None:
         cursor = conn.cursor()
-        cursor.execute("""SELECT *, 'cookie' AS 'provider'
+        cursor.execute("""SELECT *, 'cookie' AS provider
                           FROM users
                           WHERE remember_me = %s""", (remember_me,))
         user = cursor.fetchone()
