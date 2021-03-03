@@ -21,7 +21,10 @@ import aiomcache
 from riegocloud.web.views.home import Home
 from riegocloud.web.views.system import setup_routes_system
 from riegocloud.web.views.api import setup_routes_api
-from riegocloud.web.security import current_user_ctx_processor, setup_routes_security
+from riegocloud.web.security import (
+    current_user_ctx_processor,
+    setup_security
+)
 
 from riegocloud.ssh import setup_ssh
 from riegocloud.db import setup_db
@@ -99,7 +102,7 @@ async def run_app(options=None):
 
     db = setup_db(options=options)
     setup_ssh(app, options=options, db=db)
-    setup_routes_security(app)
+    app['security']=setup_security(app, db=db)
     setup_routes_system(app)
     setup_routes_api(app)
 
@@ -249,7 +252,8 @@ def _reset_admin(options):
     if len(password) == 0:
         return
     password = password.encode('utf-8')
-    password = bcrypt.hashpw(password, bcrypt.gensalt(12))
+    password = bcrypt.hashpw(password, bcrypt.gensalt())
+    password = password.decode('utf-8')
 
     conn = setup_db(options=options).conn
     cursor = conn.cursor()

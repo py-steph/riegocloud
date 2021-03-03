@@ -1,8 +1,6 @@
 import aiohttp_jinja2
 from aiohttp import web
 
-from riegocloud.web.security import raise_permission
-
 import asyncio
 import sys
 import json
@@ -19,7 +17,7 @@ def setup_routes_system(app):
 @router.get("/system", name='system')
 @aiohttp_jinja2.template('system/index.html')
 async def system_index(request):
-    await raise_permission(request, permission=None)
+    await request.app['security'].raise_permission(request, permission=None)
     text = ''
     return {"text": text}
 
@@ -27,7 +25,7 @@ async def system_index(request):
 @router.get("/system/check_update", name='system_check_update')
 @aiohttp_jinja2.template('system/index.html')
 async def system_check_update(request):
-    await raise_permission(request, permission=None)
+    await request.app['security'].raise_permission(request, permission=None)
     update = await _check_update("No update")
     return {'text':  update}
 
@@ -35,7 +33,7 @@ async def system_check_update(request):
 @router.get("/system/do_update", name='system_do_update')
 @aiohttp_jinja2.template('system/index.html')
 async def system_do_update(request):
-    await raise_permission(request, permission=None)
+    await request.app['security'].raise_permission(request, permission=None)
     await _do_update()
     return {'text': "Restart erforderlich"}
 
@@ -43,7 +41,7 @@ async def system_do_update(request):
 @router.get("/system/restart", name='system_restart')
 @aiohttp_jinja2.template('system/index.html')
 async def system_restart(request):
-    await raise_permission(request, permission=None)
+    await request.app['security'].raise_permission(request, permission=None)
     # TODO shedule exit for a few seconds and return a redirect
     asyncio.get_event_loop().call_later(1, exit, 0)
     raise web.HTTPSeeOther(request.app.router['system'].url_for())
