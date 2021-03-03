@@ -124,7 +124,7 @@ async def _login_apply(request: web.Request):
         raise web.HTTPSeeOther(request.app.router['login'].url_for())
 
     cursor = conn.cursor()
-    cursor.execute("""SELECT *, 'login' AS 'provider'
+    cursor.execute("""SELECT *, 'login' AS provider
                       FROM users
                       WHERE identity = %s""", (form['identity'],))
     user = cursor.fetchone()
