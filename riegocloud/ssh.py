@@ -1,6 +1,5 @@
 import asyncio
 import asyncssh
-import sys
 from datetime import datetime
 
 
@@ -42,11 +41,12 @@ class Ssh:
         await self._shutdown_server(app, task)
 
     async def _start_server(self, app):
-        self._server = await asyncssh.listen(app['options'].ssh_server_bind_address,
-                                             app['options'].ssh_server_bind_port,
-                                             server_host_keys=app['options'].ssh_host_key,
-                                             process_factory=self._handle_client,
-                                             server_factory=MySSHServer)
+        self._server = await asyncssh.listen(
+            app['options'].ssh_server_bind_address,
+            app['options'].ssh_server_bind_port,
+            server_host_keys=app['options'].ssh_host_key,
+            process_factory=self._handle_client,
+            server_factory=MySSHServer)
 
     async def _shutdown_server(self, app, task):
         MySSHServer._shutdown_all()
@@ -77,8 +77,8 @@ class MySSHServer(asyncssh.SSHServer):
                 'timestamp': conn.get_extra_info('timestamp'),
                 'cloud_identifier': conn.get_extra_info('username'),
                 'listen_port': conn.get_extra_info('listen_port'),
-                'ip' : conn.get_extra_info('peername')[0],
-                'port' : conn.get_extra_info('peername')[1]
+                'ip': conn.get_extra_info('peername')[0],
+                'port': conn.get_extra_info('peername')[1]
 
             })
         return ret
@@ -88,8 +88,7 @@ class MySSHServer(asyncssh.SSHServer):
 
     async def server_requested(self, listen_host, listen_port):
         if (listen_host != 'localhost' or
-                listen_port != self._conn.get_extra_info('listen_port')
-                ):
+                listen_port != self._conn.get_extra_info('listen_port')):
             _log.error('unallowed TCP forarding requested from: {}'.format(
                 self._conn.get_extra_info('username')))
             await asyncio.sleep(3)

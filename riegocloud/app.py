@@ -13,7 +13,7 @@ import aiohttp_jinja2
 import jinja2
 import aiohttp_debugtoolbar
 from aiohttp_remotes import setup as setup_remotes, XForwardedRelaxed
-from aiohttp_session import setup as session_setup, get_session
+from aiohttp_session import setup as session_setup
 from aiohttp_session.memcached_storage import MemcachedStorage
 import aiomcache
 
@@ -102,7 +102,7 @@ async def run_app(options=None):
 
     db = setup_db(options=options)
     setup_ssh(app, options=options, db=db)
-    app['security']=setup_security(app, db=db)
+    app['security'] = setup_security(app, db=db)
     setup_routes_system(app)
     setup_routes_api(app)
 

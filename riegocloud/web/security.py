@@ -3,7 +3,6 @@ from aiohttp_session import get_session
 import aiohttp_jinja2
 import bcrypt
 import secrets
-import json
 import asyncio
 
 from logging import getLogger
@@ -13,7 +12,6 @@ _log = getLogger(__name__)
 async def current_user_ctx_processor(request):
     user = await get_security().get_user(request)
     return {'user': user}
-
 
 
 def get_security():
@@ -82,14 +80,16 @@ class Security():
             return user
 
         cursor = conn.cursor()
-        cursor.execute('''SELECT * FROM users_permissions 
+        cursor.execute('''SELECT * FROM users_permissions
                         WHERE user_id = %s''', (user['id'],))
         for row in cursor:
             if row['name'] == permission:
                 return user
         return None
 
-    async def raise_permission(self, request: web.BaseRequest, permission: str = None):
+    async def raise_permission(self,
+                               request: web.BaseRequest,
+                               permission: str = None):
         """Generate redirection to login form if permission is not
         sufficent. Append query string with information for redirecting
         after login to the original url.
@@ -106,10 +106,7 @@ class Security():
                 ).with_query(
                     {"redirect": str(request.rel_url)}
                 )
-            )    
-
-
-
+            )
 
     def _setup_routes(self, app):
         app.router.add_get('/login', self._login, name='login')
@@ -118,7 +115,6 @@ class Security():
         app.router.add_get('/profile', self._profile, name='profile')
         app.router.add_post('/profile', self._profile_apply)
 
-    
     @aiohttp_jinja2.template("security/login.html")
     # @router.get("/login", name='login')
     async def _login(self, request: web.Request):
@@ -128,7 +124,6 @@ class Security():
         session = await get_session(request)
         session['csrf_token'] = csrf_token
         return {'csrf_token': csrf_token, 'redirect': redirect}
-
 
     async def _login_apply(self, request: web.Request):
         # @ router.post("/login")
@@ -158,7 +153,8 @@ class Security():
         ):
             await asyncio.sleep(2)
             raise web.HTTPSeeOther(request.app.router['login'].url_for())
-        if not bcrypt.checkpw(form['password'].encode('utf-8'), user['password'].encode('utf-8')):
+        if not bcrypt.checkpw(form['password'].encode('utf-8'),
+                              user['password'].encode('utf-8')):
             await asyncio.sleep(2)
             raise web.HTTPSeeOther(request.app.router['login'].url_for())
 
@@ -178,11 +174,10 @@ class Security():
             except Exception:
                 conn.rollback()
             response.set_cookie("remember_me", remember_me,
-                                max_age=request.app['options'].max_age_remember_me,
+                                max_age=request.app['options'].max_age_remember_me,  # noqa: E501
                                 httponly=True,
                                 samesite='strict')
         return response
-
 
     async def _logout(self, request: web.Request):
         # @ router.get("/logout", name='logout')
