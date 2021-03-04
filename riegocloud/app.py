@@ -176,8 +176,11 @@ def _get_options():
           help='http-server bind address', default='127.0.0.1')
     p.add('--http_server_bind_port', help='http-server bind port',
           default=8181, type=int)
+    # TODO enpoint-URL is niot used
+    p.add('--http_server_endpoint', help='http-server API endpoint URL',
+          default='/api_20210221/')
     p.add('--ssh_server_hostname', help='Send this hostname to client',
-          default="cloud.finca-panorama.es")
+          default="riego.cloud")
     p.add('--ssh_server_port', help='Send this port to client',
           default=8022, type=int)
 # SSH-Server
@@ -193,7 +196,12 @@ def _get_options():
               app_name, 'apache/apache.conf.tpl'))
     p.add('--apache_conf_file', help='path to apache config file',
           default='apache/apache.conf')
-
+# NGINX patching
+    p.add('--nginx_tpl_file', help='path to nginx config template(s)',
+          default=pkg_resources.resource_filename(
+              app_name, 'nginx/nginx.conf.tpl'))
+    p.add('--nginx_conf_file', help='path to nginx config file',
+          default='nginx/nginx.conf')          
 # Directories
     p.add('--base_dir', help='Change only if you know what you are doing',
           default=Path(__file__).parent)
@@ -202,7 +210,8 @@ def _get_options():
           default=pkg_resources.resource_filename(f'{app_name}.web', 'static'))
     p.add('--http_server_template_dir',
           help='Serve template files from this directory',
-          default=pkg_resources.resource_filename(f'{app_name}.web', 'templates'))
+          default=pkg_resources.resource_filename(
+              f'{app_name}.web', 'templates'))
 # Debug
     p.add('--enable_aiohttp_debug_toolbar', action='store_true')
     p.add('--enable_aiohttp_access_log', action='store_true')
