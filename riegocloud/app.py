@@ -176,13 +176,12 @@ def _get_options():
           help='http-server bind address', default='127.0.0.1')
     p.add('--http_server_bind_port', help='http-server bind port',
           default=8181, type=int)
-    # TODO enpoint-URL is niot used
-    p.add('--http_server_endpoint', help='http-server API endpoint URL',
-          default='/api_20210221/')
     p.add('--ssh_server_hostname', help='Send this hostname to client',
-          default="riego.cloud")
+          default="my.riego.cloud")
     p.add('--ssh_server_port', help='Send this port to client',
           default=8022, type=int)
+    p.add('--cloud_server_url', help='Send this hostname to client',
+          default='https://my.riego.cloud')
 # SSH-Server
     p.add('--ssh_server_bind_port', help='ssh-server bind port',
           default=8022, type=int)
@@ -201,7 +200,7 @@ def _get_options():
           default=pkg_resources.resource_filename(
               app_name, 'nginx/nginx.conf.tpl'))
     p.add('--nginx_conf_file', help='path to nginx config file',
-          default='nginx/nginx.conf')          
+          default='nginx/nginx.conf')
 # Directories
     p.add('--base_dir', help='Change only if you know what you are doing',
           default=Path(__file__).parent)

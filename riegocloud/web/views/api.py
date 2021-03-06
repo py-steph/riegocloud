@@ -1,8 +1,5 @@
 from aiohttp import web
 import asyncio
-import sys
-import json
-import asyncssh
 from jinja2 import FileSystemLoader, Environment, TemplateNotFound
 from pathlib import Path
 
@@ -63,7 +60,7 @@ async def api_post(request):
                         cloud_identifier))
         conn.commit()
         if cursor.rowcount < 1:
-            _log.error(f'Cannot update Client: {e}')
+            _log.error('Cannot update Client:')
             await asyncio.sleep(5)
             raise web.HTTPBadRequest
         else:
@@ -74,6 +71,7 @@ async def api_post(request):
     data['ssh_server_hostname'] = options.ssh_server_hostname
     data['ssh_server_port'] = options.ssh_server_port
     data['ssh_server_listen_port'] = ssh_server_listen_port
+    data['cloud_server_url'] = options.cloud_server_url
 
     await create_apache_conf(options=options)
     await create_nginx_conf(options=options)
