@@ -32,7 +32,11 @@ class Security():
         if Security._instance is None:
             Security._instance = self
         self._db = db
-        self._setup_routes(app)
+        app.router.add_get('/login', self._login, name='login')
+        app.router.add_post('/login', self._login_apply)
+        app.router.add_get('/logout', self._logout, name='logout')
+        app.router.add_get('/profile', self._profile, name='profile')
+        app.router.add_post('/profile', self._profile_apply)
 
     async def get_user(self, request):
         session = await get_session(request)
@@ -107,13 +111,6 @@ class Security():
                     {"redirect": str(request.rel_url)}
                 )
             )
-
-    def _setup_routes(self, app):
-        app.router.add_get('/login', self._login, name='login')
-        app.router.add_post('/login', self._login_apply)
-        app.router.add_get('/logout', self._logout, name='logout')
-        app.router.add_get('/profile', self._profile, name='profile')
-        app.router.add_post('/profile', self._profile_apply)
 
     @aiohttp_jinja2.template("security/login.html")
     # @router.get("/login", name='login')
