@@ -20,12 +20,12 @@ def setup_ssh(app, options=None, db=None):
     global _instance
     if _instance is not None:
         del _instance
-    _instance = Ssh(app, options=options, db=db)
+    _instance = Ssh(app, options, db)
     return _instance
 
 
 class Ssh:
-    def __init__(self, app, options=None, db=None):
+    def __init__(self, app, db, options):
         global _instance
         if _instance is None:
             _instance = self
@@ -58,6 +58,9 @@ class Ssh:
         process.stdout.write('Welcome to my SSH server, %s!\n' %
                              process.get_extra_info('username'))
         process.exit(0)
+    
+    def get_clients(self):
+        return MySSHServer.get_clients()
 
 
 class MySSHServer(asyncssh.SSHServer):

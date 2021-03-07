@@ -47,6 +47,8 @@
 <body>
     {% set navigation_bar = [
     (url('home'), 'home', 'Home'),
+    (url('clients'), 'clients', 'Clients'),
+    (url('users'), 'users', 'Users'),
     (url('system'), 'system', 'System'),
     ] -%}
     {% set active_menu = active_menu|default('home') -%}

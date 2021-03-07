@@ -5,92 +5,80 @@ import asyncio
 import sys
 import json
 
-from pkg_resources import packaging
 
-router = web.RouteTableDef()
+class System():
+    def __init__(self, app, db=None, security=None, options=None):
+        self._db_conn = db.conn
+        self._security = security
+        self._options = options
+        app.router.add_get('/system', self._index, name='system')
+        app.router.add_get("/system/check_update",
+                           self._check_update, name='system_check_update')
+        app.router.add_get("/system/do_update",
+                           self._do_update, name='system_do_update')
+        app.router.add_get("/system/restart", self._restart,
+                           name='system_restart')
 
+    @aiohttp_jinja2.template('system/index.html')
+    async def _index(self, request):
+        await self._security.raise_perm(request, perm='superuser')
+        text = ''
+        return {"text": text}
 
-def setup_routes_system(app):
-    app.add_routes(router)
+    @aiohttp_jinja2.template('system/index.html')
+    async def _check_update(self, request):
+        latest_version = "No Upate"
+        await self._security.raise_perm(request, perm='superuser')
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, '-m', 'pip', 'list', "-o", "--format=json",
+            "--disable-pip-version-check",
+            "--no-color",
+            "--no-python-version-warning",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
 
+        stdout, stderr = await proc.communicate()
+        data = json.loads(stdout)
 
-@router.get("/system", name='system')
-@aiohttp_jinja2.template('system/index.html')
-async def system_index(request):
-    await request.app['security'].raise_permission(request, permission=None)
-    text = ''
-    return {"text": text}
+        for item in data:
+            if item['name'] == 'riegocloud':
+                latest_version = item['latest_version']
+                break
+        return {'text':  latest_version}
 
+    @aiohttp_jinja2.template('system/index.html')
+    async def _do_update(self, request):
+        await self._security.raise_perm(request, perm='superuser')
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, '-m', 'pip', 'install', "riegocloud", "--upgrade",
+            "--disable-pip-version-check",
+            "--no-color",
+            "--no-python-version-warning",
+            "-q", "-q", "-q")
+        await proc.wait()
+        return {'text': "Restart erforderlich"}
 
-@router.get("/system/check_update", name='system_check_update')
-@aiohttp_jinja2.template('system/index.html')
-async def system_check_update(request):
-    await request.app['security'].raise_permission(request, permission=None)
-    update = await _check_update("No update")
-    return {'text':  update}
+    @aiohttp_jinja2.template('system/index.html')
+    async def _restart(self, request):
+        await self._security.raise_perm(request, perm='superuser')
+        # TODO shedule exit for a few seconds and return a redirect
+        asyncio.get_event_loop().call_later(1, exit, 0)
+        raise web.HTTPSeeOther(request.app.router['system'].url_for())
 
+    async def check_installed(self):
+        version = "0.0.0"
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, '-m', 'pip', 'list', "--format=json",
+            "--disable-pip-version-check",
+            "--no-color",
+            "--no-python-version-warning",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
 
-@router.get("/system/do_update", name='system_do_update')
-@aiohttp_jinja2.template('system/index.html')
-async def system_do_update(request):
-    await request.app['security'].raise_permission(request, permission=None)
-    await _do_update()
-    return {'text': "Restart erforderlich"}
-
-
-@router.get("/system/restart", name='system_restart')
-@aiohttp_jinja2.template('system/index.html')
-async def system_restart(request):
-    await request.app['security'].raise_permission(request, permission=None)
-    # TODO shedule exit for a few seconds and return a redirect
-    asyncio.get_event_loop().call_later(1, exit, 0)
-    raise web.HTTPSeeOther(request.app.router['system'].url_for())
-
-
-async def _check_installed():
-    version = "0.0.0"
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'pip', 'list', "--format=json",
-        "--disable-pip-version-check",
-        "--no-color",
-        "--no-python-version-warning",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
-
-    stdout, stderr = await proc.communicate()
-    data = json.loads(stdout)
-    for item in data:
-        if item['name'] == 'riegocloud':
-            version = item['version']
-            break
-    return version
-
-
-async def _check_update(latest_version=None):
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'pip', 'list', "-o", "--format=json",
-        "--disable-pip-version-check",
-        "--no-color",
-        "--no-python-version-warning",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
-
-    stdout, stderr = await proc.communicate()
-    data = json.loads(stdout)
-    for item in data:
-        if item['name'] == 'riegocloud':
-            latest_version = item['latest_version']
-            break
-    return latest_version
-
-
-async def _do_update():
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'pip', 'install', "riegocloud", "--upgrade",
-        "--disable-pip-version-check",
-        "--no-color",
-        "--no-python-version-warning",
-        "-q", "-q", "-q")
-    await proc.wait()
-    exit (0)
-    #return proc.returncode
+        stdout, stderr = await proc.communicate()
+        data = json.loads(stdout)
+        for item in data:
+            if item['name'] == 'riegocloud':
+                version = item['version']
+                break
+        return version

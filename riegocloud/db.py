@@ -16,16 +16,8 @@ def get_db():
     return _instance
 
 
-def setup_db(options=None):
-    global _instance
-    if _instance is not None:
-        del _instance
-    _instance = Db(options=options)
-    return _instance
-
-
 class Db:
-    def __init__(self, options=None):
+    def __init__(self, options):
         global _instance
         if _instance is None:
             _instance = self

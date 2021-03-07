@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% set title = "Riegocloud - Clients" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>New Client</h1>
+<form action="{{url('clients_new')}}" method="POST"
+      enctype="multipart/form-data">
+
+      <div class="mb-3">
+        <label for="cloud_identifier" class="form-label">cloud_identifier</label>
+        <input id="cloud_identifier" name="cloud_identifier" value="" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="is_disabled" class="form-label">is_disabled</label>
+        <input id="is_disabled" name="is_disabled" value="" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="public_user_key" class="form-public_user_key">public_user_key</label>
+        <input id="public_user_key" name="public_user_key" value="" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ssh_server_listen_port" class="form-label">ssh_server_listen_port</label>
+        <input id="ssh_server_listen_port" name="ssh_server_listen_port" value="" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ssh_server_hostname" class="form-label">ssh_server_hostname</label>
+        <input id="ssh_server_hostname" name="ssh_server_hostname" value="" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ssh_server_port" class="form-label">ssh_server_port</label>
+        <input id="ssh_server_port" name="ssh_server_port" value="" type="text" class="form-control">
+      </div>
+
+      <input type="submit">
+</form>
+<hr>
+<p>
+    <a href="{{url('clients')}}">list</a>
+</p>
+{% endblock %}

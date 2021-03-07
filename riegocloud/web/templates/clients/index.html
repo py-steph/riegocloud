@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% set title = "Riegocloud - clients" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>Clients</h1>
+<p>
+  <ul>
+    {% for item in items %}
+    <li>
+      <a href="{{url('clients_view', item_id=item['id']) }}">{{ item['cloud_identifier'] }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</p>
+<hr>
+<p>
+  <a href="{{url('clients_new')}}">New</a> 
+</p>
+
+{% endblock %}

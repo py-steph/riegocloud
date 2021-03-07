@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% set title = "Riegocloud - clients" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>Edit: {{ item['id'] }}</h1>
+
+<form action="{{url('clients_edit', item_id=item['id']) }}" method="POST"
+      enctype="multipart/form-data">
+
+      <div class="mb-3">
+        <label for="cloud_identifier" class="form-label">cloud_identifier</label>
+        <input id="cloud_identifier" name="cloud_identifier" value="{{item['cloud_identifier']}}" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="is_disabled" class="form-label">is_disabled</label>
+        <input id="is_disabled" name="is_disabled" value="{{item['is_disabled']}}" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="public_user_key" class="form-public_user_key">public_user_key</label>
+        <input id="public_user_key" name="public_user_key" value="{{item['public_user_key']}}" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ssh_server_listen_port" class="form-label">ssh_server_listen_port</label>
+        <input id="ssh_server_listen_port" name="ssh_server_listen_port" value="{{item['ssh_server_listen_port']}}" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ssh_server_hostname" class="form-label">ssh_server_hostname</label>
+        <input id="ssh_server_hostname" name="ssh_server_hostname" value="{{item['ssh_server_hostname']}}" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ssh_server_port" class="form-label">ssh_server_port</label>
+        <input id="ssh_server_port" name="ssh_server_port" value="{{item['ssh_server_port']}}" type="text" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="created_at" class="form-label">created_at</label>
+        <input id="created_at" name="created_at" value="{{item['created_at']}}" type="text" class="form-control">
+      </div>
+
+
+  <input type="submit">
+</form>
+<hr>
+
+<p>
+    <a href="{{url('clients')}}">list</a>
+    <a href="{{url('clients_view', item_id=item['id']) }}">view</a>
+    <a href="{{url('clients_delete', item_id=item['id']) }}">delete</a>
+</p>
+{% endblock %}

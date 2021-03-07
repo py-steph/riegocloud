@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% set title = "Riego - User" %}
+{% set active_menu = "system" %}
+
+
+{% block content %}
+<h1>{{ item['id'] }}</h1>
+<ul>
+    <li>id: {{item['id']}}</li>
+    <li>cloud_identifier: {{item['cloud_identifier']}}</li>
+	<li>is_disabled: {{item['is_disabled']}}</li>
+    <li>public_user_key: {{item['public_user_key']}}</li>
+    <li>ssh_server_listen_port: {{item['ssh_server_listen_port']}}</li>
+	<li>ssh_server_hostname: {{item['ssh_server_hostname']}}</li>
+	<li>ssh_server_port: {{item['ssh_server_port']}}</li>
+	<li>created_at: {{item['created_at']}}</li>
+</ul>
+
+<p>
+    <a href="{{url('clients')}}">list</a> 
+    <a href="{{url('clients_edit',item_id=item['id'])}}">edit</a>
+</p>
+{% endblock %}

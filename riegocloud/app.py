@@ -17,19 +17,19 @@ from aiohttp_session import setup as session_setup
 from aiohttp_session.memcached_storage import MemcachedStorage
 import aiomcache
 
+from riegocloud import __version__
+
+from riegocloud.ssh import Ssh
+from riegocloud.db import Db
+from riegocloud.web.security import (current_user_ctx_processor,
+                                     Security)
 
 from riegocloud.web.views.home import Home
-from riegocloud.web.views.system import setup_routes_system
-from riegocloud.web.views.api import setup_routes_api
-from riegocloud.web.security import (
-    current_user_ctx_processor,
-    setup_security
-)
+from riegocloud.web.views.system import System
+from riegocloud.web.views.api import Api
+from riegocloud.web.views.clients import Clients
+from riegocloud.web.views.users import Users
 
-from riegocloud.ssh import setup_ssh
-from riegocloud.db import setup_db
-
-from riegocloud import __version__
 
 app_name = 'riegocloud'
 
@@ -100,14 +100,15 @@ async def run_app(options=None):
     app.router.add_static('/static', options.http_server_static_dir,
                           name='static', show_index=True)
 
-    db = setup_db(options=options)
-    setup_ssh(app, options=options, db=db)
-    app['security'] = setup_security(app, db=db)
-    setup_routes_system(app)
-    setup_routes_api(app)
+    db = Db(options)
+    ssh = Ssh(app, db, options)
+    security = Security(app, db, options)
 
-    Home(app)
-
+    Api(app, db=db, security=security, options=options)
+    Home(app, db=db, security=security, ssh=ssh)
+    Clients(app, db=db, security=security)
+    System(app, db=db, security=security, options=options)
+    Users(app, db=db, security=security)
     return app
 
 
@@ -176,6 +177,7 @@ def _get_options():
           help='http-server bind address', default='127.0.0.1')
     p.add('--http_server_bind_port', help='http-server bind port',
           default=8181, type=int)
+    p.add('--http_server_endpoint', default='/api_20210221/')
     p.add('--ssh_server_hostname', help='Send this hostname to client',
           default="my.riego.cloud")
     p.add('--ssh_server_port', help='Send this port to client',
@@ -253,7 +255,7 @@ def _get_options():
 
 def _reset_admin(options):
     from psycopg2 import IntegrityError
-    from riegocloud.db import setup_db
+    from riegocloud.db import Db
     import bcrypt
 
     password = options.reset_admin
@@ -263,7 +265,7 @@ def _reset_admin(options):
     password = bcrypt.hashpw(password, bcrypt.gensalt())
     password = password.decode('utf-8')
 
-    conn = setup_db(options=options).conn
+    conn = Db(options).conn
     cursor = conn.cursor()
     try:
         cursor.execute('''UPDATE users

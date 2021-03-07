@@ -18,20 +18,14 @@ def get_security():
     return Security._instance
 
 
-def setup_security(app, db=None):
-    if Security._instance is not None:
-        del Security._instance
-    Security._instance = Security(app, db=db)
-    return Security._instance
-
-
 class Security():
     _instance = None
 
-    def __init__(self, app, db=None):
+    def __init__(self, app, db, options):
         if Security._instance is None:
             Security._instance = self
-        self._db = db
+        self._db_conn = db.conn
+        self._options = options
         app.router.add_get('/login', self._login, name='login')
         app.router.add_post('/login', self._login_apply)
         app.router.add_get('/logout', self._logout, name='logout')
@@ -40,71 +34,67 @@ class Security():
 
     async def get_user(self, request):
         session = await get_session(request)
-        conn = self._db.conn
         user_id = session.get('user_id')
         if user_id is not None:
-            cursor = conn.cursor()
-            cursor.execute("""SELECT *, 'login' AS provider
+            cursor = self._db_conn.cursor()
+            cursor.execute("""SELECT *, 'session' AS provider
                             FROM users
                             WHERE id = %s""", (user_id,))
             user = cursor.fetchone()
+            # Disabled User must be logged out
             if user is None or user['is_disabled']:
                 session.pop('user_id', None)
                 return None
             return user
         remember_me = request.cookies.get('remember_me')
         if remember_me is not None:
-            cursor = conn.cursor()
-            cursor.execute("""SELECT *, 'cookie' AS provider
+            cursor.execute("""SELECT *, 'remember_me' AS provider
                             FROM users
                             WHERE remember_me = %s""", (remember_me,))
             user = cursor.fetchone()
+            # Disabled User must be logged out
             if user is not None and user['is_disabled']:
                 try:
                     cursor.execute("""UPDATE users
                                     SET remember_me = ''
                                     WHERE id = %s""", (user['id'],))
-                    conn.commit()
+                    self._db_conn.commit()
                 except Exception:
-                    conn.rollback()
+                    self._db_conn.rollback()
                 return None
             return user
         return None
 
-    async def check_permission(self, request, permission=None):
+    async def check_perm(self, request, perm=None):
         user = await self.get_user(request)
-        conn = self._db.conn
         if user is None:
-            return None
-        if user['is_disabled']:
             return None
         if user['is_superuser']:
             return user
-        if permission is None:
+        if perm is None:
             return user
 
-        cursor = conn.cursor()
+        cursor = self._db_conn.cursor()
         cursor.execute('''SELECT * FROM users_permissions
                         WHERE user_id = %s''', (user['id'],))
-        for row in cursor:
-            if row['name'] == permission:
+        rows = cursor.fetchall()
+        for row in rows:
+            if row['name'] == perm:
                 return user
         return None
 
-    async def raise_permission(self,
-                               request: web.BaseRequest,
-                               permission: str = None):
+    async def raise_perm(self, request: web.BaseRequest, perm: str = None):
         """Generate redirection to login form if permission is not
         sufficent. Append query string with information for redirecting
         after login to the original url.
 
         :param request: [description]
         :type request: web.Baserequest
-        :param permission: If no permission is given, check auth only
-        :type permission: str, optional
+        :param perm: If no permission is given, check auth only
+        :type perm: str, optional
         :raises web.HTTPSeeOther: [description]
         """
-        if await self.check_permission(request, permission=permission) is None:
+        if await self.check_perm(request, perm=perm) is None:
             raise web.HTTPSeeOther(
                 request.app.router['login'].url_for(
                 ).with_query(
@@ -126,7 +116,6 @@ class Security():
         # @ router.post("/login")
         form = await request.post()
         session = await get_session(request)
-        conn = self._db.conn
         if session.get('csrf_token') != form['csrf_token']:
             # Normally not possible
             await asyncio.sleep(2)
@@ -136,7 +125,7 @@ class Security():
             await asyncio.sleep(2)
             raise web.HTTPSeeOther(request.app.router['login'].url_for())
 
-        cursor = conn.cursor()
+        cursor = self._db_conn.cursor()
         cursor.execute("""SELECT *, 'login' AS provider
                         FROM users
                         WHERE identity = %s""", (form['identity'],))
@@ -167,11 +156,12 @@ class Security():
                 cursor.execute('''UPDATE users
                                 SET remember_me = %s
                                 WHERE id = %s ''', (remember_me, user['id']))
-                conn.commit()
-            except Exception:
-                conn.rollback()
+                self._db_conn.commit()
+            except Exception as e:
+                self._db_conn.rollback()
+                _log.error(f'Rememeber_me: unable to update: {e}')
             response.set_cookie("remember_me", remember_me,
-                                max_age=request.app['options'].max_age_remember_me,  # noqa: E501
+                                max_age=self._options.max_age_remember_me,  # noqa: E501
                                 httponly=True,
                                 samesite='strict')
         return response
@@ -179,16 +169,16 @@ class Security():
     async def _logout(self, request: web.Request):
         # @ router.get("/logout", name='logout')
         user = await self.get_user(request)
-        conn = self._db.conn
-        cursor = conn.cursor()
+        cursor = self._db_conn.cursor()
         if user is not None:
             try:
                 cursor.execute("""UPDATE users
                                 SET remember_me = ''
                                 WHERE id = %s""", (user['id'],))
-                conn.commit()
-            except Exception:
-                conn.rollback()
+                self._db_conn.commit()
+            except Exception as e:
+                _log.error(f'logout: Unable to Update: {e}')
+                self._db_conn.rollback()
         session = await get_session(request)
         if session is not None:
             session.pop('user_id', None)
@@ -200,11 +190,9 @@ class Security():
 
     @ aiohttp_jinja2.template("security/profile.html")
     async def _profile(self, request: web.Request):
-        # @ router.get("/profile", name='profile')
         return {}
 
     async def _profile_apply(self, request: web.Request):
-        # @ router.post("/profile")
         form = await request.post()
         user = await self.get_user(request)
 
@@ -212,15 +200,15 @@ class Security():
         password = form['new_password_1'].encode('utf-8')
         password = bcrypt.hashpw(password, bcrypt.gensalt())
         password = password.decode('utf-8')
-        conn = self._db.conn
-        cursor = conn.cursor()
+        cursor = self._db_conn.cursor()
         try:
             cursor.execute('''UPDATE users
                             SET password = %s
                             WHERE id = %s ''', (password, user['id']))
-            conn.commit()
-        except Exception:
-            conn.rollback()
+            self._db_conn.commit()
+        except Exception as e:
+            _log.error(f'Unable to update: {e}')
+            self._db_conn.rollback()
         if cursor.rowcount < 1:
             raise web.HTTPSeeOther(request.app.router['profile'].url_for())
         else:

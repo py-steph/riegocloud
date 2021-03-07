@@ -1,14 +1,16 @@
 import aiohttp_jinja2
 
-from riegocloud.ssh import MySSHServer
-
 
 class Home():
-    def __init__(self, app):
+    def __init__(self, app, db=None, security=None, ssh=None):
+        self._db_conn = db.conn
+        self._ssh = ssh
+
+        self._security = security
         app.router.add_get('/', self.index, name='home')
 
     @aiohttp_jinja2.template('home/index.html')
     async def index(self, request):
-        await request.app['security'].raise_permission(request, "superuser")
-        clients = MySSHServer.get_clients()
+        await self._security.raise_perm(request, perm="superuser")
+        clients = self._ssh.get_clients()
         return {'clients':  clients}
