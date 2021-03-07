@@ -73,6 +73,7 @@ async def run_app(options=None):
     @web.middleware
     async def middleware1(request, handler):
         if options.enable_request_log:
+            print(request.transport.get_extra_info("peername"))
             print(request.rel_url)
             print(request.headers)
         response = await handler(request)
