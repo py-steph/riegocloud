@@ -69,7 +69,16 @@ async def run_app(options=None):
     if options.enable_asyncio_debug_log:
         loop.set_debug(True)
 
-    app = web.Application()
+
+    @web.middleware
+    async def middleware1(request, handler):
+        if options.enable_request_log:
+            print(request.rel_url)
+            print(request.headers)
+        response = await handler(request)
+        return response
+
+    app = web.Application(middlewares=[middleware1])
 
     app.on_startup.append(on_startup)
     app.on_shutdown.append(on_shutdown)
@@ -218,6 +227,7 @@ def _get_options():
     p.add('--enable_aiohttp_access_log', action='store_true')
     p.add('--enable_asyncio_debug_log', action='store_true')
     p.add('--enable_ssh_debug_log', action='store_true')
+    p.add('--enable_request_log', action='store_true')
     p.add('--WindowsSelectorEventLoopPolicy', action='store_true')
 
 # Version, Help, Verbosity
