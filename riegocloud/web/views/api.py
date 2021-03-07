@@ -8,7 +8,7 @@ _log = getLogger(__name__)
 
 
 class Api():
-    def __init__(self, app, db=None, security=None, options=None):
+    def __init__(self, app, db, security, options):
         self._db_conn = db.conn
         self._security = security
         self._options = options

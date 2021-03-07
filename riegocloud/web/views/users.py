@@ -6,7 +6,7 @@ _log = getLogger(__name__)
 
 
 class Users():
-    def __init__(self, app, db=None, security=None):
+    def __init__(self, app, db, security):
         self._db_conn = db.conn
         self._security = security
         app.router.add_get('/users', self._index, name='users')

@@ -1,7 +1,5 @@
 import psycopg2
 from psycopg2.extras import DictCursor
-import asyncio
-from pathlib import Path
 from yoyo import read_migrations
 from yoyo import get_backend
 

@@ -104,11 +104,11 @@ async def run_app(options=None):
     ssh = Ssh(app, db, options)
     security = Security(app, db, options)
 
-    Api(app, db=db, security=security, options=options)
-    Home(app, db=db, security=security, ssh=ssh)
-    Clients(app, db=db, security=security)
-    System(app, db=db, security=security, options=options)
-    Users(app, db=db, security=security)
+    Api(app, db, security, options)
+    Home(app, db, security, ssh)
+    Clients(app, db, security)
+    System(app, db, security, options)
+    Users(app, db, security)
     return app
 
 

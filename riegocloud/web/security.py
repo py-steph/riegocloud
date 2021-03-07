@@ -103,7 +103,6 @@ class Security():
             )
 
     @aiohttp_jinja2.template("security/login.html")
-    # @router.get("/login", name='login')
     async def _login(self, request: web.Request):
         redirect = request.rel_url.query.get("redirect", "")
         csrf_token = secrets.token_urlsafe()
@@ -113,7 +112,6 @@ class Security():
         return {'csrf_token': csrf_token, 'redirect': redirect}
 
     async def _login_apply(self, request: web.Request):
-        # @ router.post("/login")
         form = await request.post()
         session = await get_session(request)
         if session.get('csrf_token') != form['csrf_token']:
@@ -160,6 +158,8 @@ class Security():
             except Exception as e:
                 self._db_conn.rollback()
                 _log.error(f'Rememeber_me: unable to update: {e}')
+            if cursor.rowcount < 1:
+                _log.error('Rememeber_me: unable to update:')
             response.set_cookie("remember_me", remember_me,
                                 max_age=self._options.max_age_remember_me,  # noqa: E501
                                 httponly=True,
@@ -167,7 +167,6 @@ class Security():
         return response
 
     async def _logout(self, request: web.Request):
-        # @ router.get("/logout", name='logout')
         user = await self.get_user(request)
         cursor = self._db_conn.cursor()
         if user is not None:
@@ -179,6 +178,8 @@ class Security():
             except Exception as e:
                 _log.error(f'logout: Unable to Update: {e}')
                 self._db_conn.rollback()
+            if cursor.rowcount < 1:
+                _log.error('logout: Unable to Update')
         session = await get_session(request)
         if session is not None:
             session.pop('user_id', None)

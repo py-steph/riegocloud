@@ -7,7 +7,7 @@ import json
 
 
 class System():
-    def __init__(self, app, db=None, security=None, options=None):
+    def __init__(self, app, db, security, options):
         self._db_conn = db.conn
         self._security = security
         self._options = options

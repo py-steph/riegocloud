@@ -2,7 +2,7 @@ import aiohttp_jinja2
 
 
 class Home():
-    def __init__(self, app, db=None, security=None, ssh=None):
+    def __init__(self, app, db, security, ssh):
         self._db_conn = db.conn
         self._ssh = ssh
 
