@@ -1,0 +1,22 @@
+ConfigArgParse
+yoyo-migrations
+aiohttp
+jinja2
+uvloop; sys_platform == "linux"
+cchardet
+aiohttp_remotes
+aiohttp_debugtoolbar
+aiohttp_session[aiomcache]
+bcrypt
+asyncssh
+psycopg2
+aiosmtplib
+
+wheel
+pylint
+autopep8
+flake8
+setuptools
+bump2version
+twine
+#python-semantic-release

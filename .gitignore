@@ -4,13 +4,10 @@ log/*
 db/*
 ssh/*
 apache/*
-
+nginx/*
 
 /PRIVATE.txt
-/INSTALL.txt
-/CHANGELOG.md
-/requirements_dev.txt
-/riego.conf
+/riegocloud.conf
 /tt.py
 /upload.bat
 

@@ -1,0 +1,45 @@
+#/bin/sh
+
+apt install -f memcached python3-venv python3-wheel build-essential rustc python3-dev libssl-dev
+
+
+adduser --system --group --home /srv/riegocloud riegocloud
+
+cd /srv/riegocloud
+rm -rf .venv
+sudo -H -i -u riegocloud bash
+python3 -m venv .venv && source .venv/bin/activate && python3 -m pip install pip --upgrade && pip install riegocloud
+sh .venv/bin/setup_service.sh
+
+visudo:
+riegocloud ALL=(root) NOPASSWD: /usr/sbin/apachectl graceful
+riegocloud ALL=(root) NOPASSWD: /bin/systemctl reload nginx
+
+
+
+
+VSC-Windows-Development:
+Extension Python von Microsoft installieren
+
+
+py -3 -m venv .venv
+.venv\scripts\activate
+pip install pylint
+pip install pep8
+pip install -r requirements_dev.txt
+
+
+code .
+
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+
+POSTGRESQL
+sudo -u postgres psql
+create database riegocloud;
+create user riegocloud with encrypted password 'riegocloud';
+grant all privileges on database riegocloud to riegocloud;
+
+
+
+

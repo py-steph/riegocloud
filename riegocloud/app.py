@@ -69,7 +69,6 @@ async def run_app(options=None):
     if options.enable_asyncio_debug_log:
         loop.set_debug(True)
 
-
     @web.middleware
     async def middleware1(request, handler):
         if options.enable_request_log:

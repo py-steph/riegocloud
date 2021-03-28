@@ -1,6 +1,7 @@
 from aiohttp import web
-from aiohttp_session import get_session
+from aiohttp_session import get_session, new_session
 import aiohttp_jinja2
+import jinja2
 import bcrypt
 import secrets
 import asyncio
@@ -102,19 +103,26 @@ class Security():
                 )
             )
 
-    @aiohttp_jinja2.template("security/login.html")
+#    @aiohttp_jinja2.template("security/login.html")
     async def _login(self, request: web.Request):
         redirect = request.rel_url.query.get("redirect", "")
         csrf_token = secrets.token_urlsafe()
-    #    session = await new_session(request)
-        session = await get_session(request)
+#        session = await get_session(request)
+        session = await new_session(request)
         session['csrf_token'] = csrf_token
-        return {'csrf_token': csrf_token, 'redirect': redirect}
+        session.changed()
+        context = {'csrf_token': csrf_token, 'redirect': redirect}
+
+        response = aiohttp_jinja2.render_template('security/login.html',
+                                                  request,
+                                                  context)
+        return response
 
     async def _login_apply(self, request: web.Request):
         form = await request.post()
         session = await get_session(request)
         if session.get('csrf_token') != form['csrf_token']:
+            _log.info('Possible CSRF attack')
             # Normally not possible
             await asyncio.sleep(2)
             raise web.HTTPUnauthorized()
@@ -143,6 +151,7 @@ class Security():
             raise web.HTTPSeeOther(request.app.router['login'].url_for())
 
         session['user_id'] = user['id']
+        session.changed()
 
         location = form.get('redirect')
         if location is None or location == '':
@@ -183,6 +192,7 @@ class Security():
         session = await get_session(request)
         if session is not None:
             session.pop('user_id', None)
+        session.invalidate()
         response = web.HTTPSeeOther(request.app.router['login'].url_for())
     #    response.set_cookie('remember_me', None,
     #                        expires='Thu, 01 Jan 1970 00:00:00 GMT')
