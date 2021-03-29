@@ -19,19 +19,29 @@ riegocloud ALL=(root) NOPASSWD: /bin/systemctl reload nginx
 
 
 VSC-Windows-Development:
-Extension Python von Microsoft installieren
 
-
-py -3 -m venv .venv
+python3 -m venv .venv
 .venv\scripts\activate
 pip install pylint
 pip install pep8
 pip install -r requirements_dev.txt
 
+code .
+Extension Python von Microsoft installieren
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+
+VSC-OSX-Development:
+
+python3 -m venv .venv
+source .venv/scripts/activate
+pip install pylint
+pip install pep8
+pip install -r requirements_dev.txt
 
 code .
+Extension Python von Microsoft installieren
 
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 
 POSTGRESQL

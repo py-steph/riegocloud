@@ -22,7 +22,7 @@ setuptools.setup(
         'aiohttp_remotes',
         'aiohttp_session[aiomcache]',
         'aiohttp_debugtoolbar',
-        'uvloop; sys_platform == "linux"',
+        'uvloop; sys_platform != "wiin32"',
         'yoyo-migrations',
         'bcrypt',
         'cchardet',
